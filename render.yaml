@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: zoom-pointing-poker
+    env: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./build
+    envVars:
+      - key: NODE_ENV
+        value: production
+    domains:
+      - zoom-pointing-poker.app
+    pullRequestPreviewsEnabled: false
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=3600
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html 
