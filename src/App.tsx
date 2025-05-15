@@ -41,6 +41,7 @@ const App: React.FC = () => {
 
         // Get user info
         const userContextResponse = await zoomSdk.getUserContext();
+        console.log('User context', userContextResponse);
         // Cast to our custom interface that matches the actual structure
         const userContext = userContextResponse as unknown as ZoomUserContext;
         setUserId(userContext.userId);
@@ -48,11 +49,13 @@ const App: React.FC = () => {
 
         // Get meeting participants
         const participantsResponse = await zoomSdk.getMeetingParticipants();
+        console.log('Participants', participantsResponse);
         if (participantsResponse && participantsResponse.participants) {
           const participantIds = participantsResponse.participants.map(
             (participant) => participant.participantUUID
           );
           setParticipants(participantIds);
+          console.log('Participants', participantIds);
         }
 
         // Register event listener for participant changes
@@ -86,6 +89,7 @@ const App: React.FC = () => {
 
   const handleCreateTicket = (ticket: Ticket) => {
     setCurrentTicket(ticket);
+    console.log('Current ticket', ticket);
     setVotes([]);
     setShowResults(false);
     
@@ -99,8 +103,12 @@ const App: React.FC = () => {
   };
 
   const handleSubmitVote = (points: number) => {
+    console.log('Voting for', points);
+    console.log('User ID', userId);
+    console.log('Current ticket', currentTicket);
     if (!userId || !currentTicket) return;
-    
+
+    console.log('Votes', votes);
     // Check if the user has already voted
     const existingVoteIndex = votes.findIndex(vote => vote.userId === userId);
     
