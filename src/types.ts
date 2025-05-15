@@ -28,10 +28,9 @@ export interface ZoomEvent {
 }
 
 export interface ZoomUserContext {
-  userId: string;
-  displayName: string;
-  isHost: boolean;
-  isCoHost: boolean;
+  participantId: string;
+  screenName: string;
+  role: 'host' | 'co-host' | 'participant';
 }
 
 export type PointValue = 1 | 2 | 3 | 5 | 8 | 13; 

@@ -44,8 +44,8 @@ const App: React.FC = () => {
         console.log('User context', userContextResponse);
         // Cast to our custom interface that matches the actual structure
         const userContext = userContextResponse as unknown as ZoomUserContext;
-        setUserId(userContext.userId);
-        setIsHost(userContext.isHost || userContext.isCoHost);
+        setUserId(userContext.participantId);
+        setIsHost(userContext.role === 'host' || userContext.role === 'co-host');
 
         // Get meeting participants
         const participantsResponse = await zoomSdk.getMeetingParticipants();
