@@ -52,11 +52,16 @@ const Confetti: React.FC<ConfettiProps> = ({ active, duration = 3000 }) => {
       if (elapsed > duration) {
         if (animationRef.current) {
           cancelAnimationFrame(animationRef.current);
+          animationRef.current = undefined;
         }
+        // Clear the canvas and hide it
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.style.display = 'none';
         return;
       }
 
+      // Show canvas if it was hidden
+      canvas.style.display = 'block';
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       pieces.forEach(piece => {
@@ -84,7 +89,11 @@ const Confetti: React.FC<ConfettiProps> = ({ active, duration = 3000 }) => {
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
+        animationRef.current = undefined;
       }
+      // Clear and hide canvas on cleanup
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      canvas.style.display = 'none';
     };
   }, [active, duration]);
 
@@ -96,7 +105,8 @@ const Confetti: React.FC<ConfettiProps> = ({ active, duration = 3000 }) => {
         top: 0,
         left: 0,
         pointerEvents: 'none',
-        zIndex: 9999
+        zIndex: 9999,
+        display: 'none' // Start hidden
       }}
     />
   );
