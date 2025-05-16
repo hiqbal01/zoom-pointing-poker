@@ -138,7 +138,7 @@ const Results: React.FC<ResultsProps> = ({
               <Tbody>
                 {votes.map((vote, index) => (
                   <Tr key={vote.userId}>
-                    <Td>Participant {index + 1}</Td>
+                    <Td>{vote.displayName}</Td>
                     <Td isNumeric>{vote.points}</Td>
                   </Tr>
                 ))}

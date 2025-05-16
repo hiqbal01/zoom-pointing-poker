@@ -1,9 +1,9 @@
 services:
   - type: web
     name: zoom-pointing-poker
-    env: static
-    buildCommand: npm ci && npm run build
-    staticPublishPath: ./build
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production

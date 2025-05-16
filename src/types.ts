@@ -7,6 +7,7 @@ export interface Ticket {
 export interface Vote {
   userId: string;
   points: number;
+  displayName: string;
 }
 
 export interface Participant {
@@ -30,7 +31,7 @@ export interface ZoomEvent {
 export interface ZoomUserContext {
   participantId: string;
   screenName: string;
-  role: 'host' | 'co-host' | 'participant';
+  role: 'host' | 'cohost' | 'participant';
 }
 
 export type PointValue = 1 | 2 | 3 | 5 | 8 | 13; 

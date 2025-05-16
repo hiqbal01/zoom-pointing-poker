@@ -10,12 +10,12 @@ import {
   Badge,
   VStack,
 } from '@chakra-ui/react';
-import { Ticket, Vote, PointValue } from '../types';
+import { Ticket, Vote, PointValue, ZoomParticipant } from '../types';
 
 interface PointingSessionProps {
   ticket: Ticket;
   votes: Vote[];
-  participants: string[];
+  participants: ZoomParticipant[];
   isHost: boolean;
   onSubmitVote: (points: number) => void;
   onRevealResults: () => void;

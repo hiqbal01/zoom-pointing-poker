@@ -1,20 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { Box, VStack, useToast } from '@chakra-ui/react';
 import zoomSdk from '@zoom/appssdk';
+import { io, Socket } from 'socket.io-client';
 import Header from './components/Header';
 import TicketForm from './components/TicketForm';
 import PointingSession from './components/PointingSession';
 import Results from './components/Results';
-import { Ticket, Vote, ZoomUserContext } from './types';
+import { Ticket, Vote, ZoomParticipant, ZoomUserContext } from './types';
+
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3001';
 
 const App: React.FC = () => {
   const [zoomInitialized, setZoomInitialized] = useState(false);
   const [isHost, setIsHost] = useState(false);
   const [userId, setUserId] = useState<string>('');
-  const [participants, setParticipants] = useState<string[]>([]);
+  const [meetingId, setMeetingId] = useState<string>('');
+  const [participants, setParticipants] = useState<ZoomParticipant[]>([]);
   const [currentTicket, setCurrentTicket] = useState<Ticket | null>(null);
   const [votes, setVotes] = useState<Vote[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [socket, setSocket] = useState<Socket | null>(null);
   const toast = useToast();
 
   useEffect(() => {
@@ -24,7 +29,6 @@ const App: React.FC = () => {
         // Configure Zoom SDK with required capabilities
         const configResponse = await zoomSdk.config({
           capabilities: [
-            // Using proper API names according to documentation
             'getSupportedJsApis',
             'getMeetingContext',
             'getUserContext',
@@ -39,32 +43,82 @@ const App: React.FC = () => {
         console.log('Zoom SDK initialized', configResponse);
         setZoomInitialized(true);
 
+        // Get meeting context for meeting ID
+        const meetingContext = await zoomSdk.getMeetingContext();
+        console.log('Meeting context', meetingContext);
+        setMeetingId(meetingContext.meetingID);
+
         // Get user info
         const userContextResponse = await zoomSdk.getUserContext();
-        console.log('User context', userContextResponse);
-        // Cast to our custom interface that matches the actual structure
         const userContext = userContextResponse as unknown as ZoomUserContext;
         setUserId(userContext.participantId);
-        setIsHost(userContext.role === 'host' || userContext.role === 'co-host');
+        setIsHost(userContext.role === 'host' || userContext.role === 'cohost');
+
+        // Initialize socket connection
+        const newSocket = io(SOCKET_URL, {
+          query: {
+            meetingId: meetingContext.meetingID,
+            userId: userContext.participantId
+          }
+        });
+
+        newSocket.on('connect', () => {
+          console.log('Connected to WebSocket server');
+        });
+
+        newSocket.on('stateUpdate', (data: { 
+          ticket: Ticket | null;
+          votes: Vote[];
+          participants: ZoomParticipant[];
+        }) => {
+          setCurrentTicket(data.ticket);
+          setVotes(data.votes);
+          setParticipants(data.participants);
+        });
+
+        newSocket.on('meetingEnded', () => {
+          setCurrentTicket(null);
+          setVotes([]);
+          setShowResults(false);
+          toast({
+            title: 'Meeting ended',
+            description: 'The pointing session has ended.',
+            status: 'info',
+            duration: 5000,
+            isClosable: true,
+          });
+        });
+
+        setSocket(newSocket);
 
         // Get meeting participants
         const participantsResponse = await zoomSdk.getMeetingParticipants();
-        console.log('Participants', participantsResponse);
         if (participantsResponse && participantsResponse.participants) {
-          const participantIds = participantsResponse.participants.map(
-            (participant) => participant.participantUUID
-          );
-          setParticipants(participantIds);
-          console.log('Participants', participantIds);
+          const participants = participantsResponse.participants.map((p) => {
+            const newParticipant = {
+                userId: p.participantUUID, 
+                displayName: p.screenName,
+                isHost: p.role === 'host',
+                isCoHost: p.role === 'cohost'
+            };
+            return newParticipant;
+        });
+        setParticipants(participants);
         }
 
         // Register event listener for participant changes
         zoomSdk.onParticipantChange((event) => {
           if (event && event.participants) {
-            const participantIds = event.participants.map(
-              (participant) => participant.participantUUID
-            );
-            setParticipants(participantIds);
+            const participants = event.participants.map((p) => {
+              const newParticipant = {
+                userId: p.participantUUID,
+                displayName: p.screenName,
+                isHost: p.role === 'host',
+                isCoHost: p.role === 'cohost'
+            };
+            return newParticipant;
+          });
+          setParticipants(participants);
           }
         });
       } catch (error) {
@@ -83,15 +137,16 @@ const App: React.FC = () => {
 
     // Cleanup function
     return () => {
-      // Remove event listeners if needed
+      if (socket) {
+        socket.disconnect();
+      }
     };
   }, [toast]);
 
   const handleCreateTicket = (ticket: Ticket) => {
-    setCurrentTicket(ticket);
-    console.log('Current ticket', ticket);
-    setVotes([]);
-    setShowResults(false);
+    if (socket) {
+      socket.emit('createTicket', ticket);
+    }
     
     toast({
       title: 'New ticket created',
@@ -103,24 +158,10 @@ const App: React.FC = () => {
   };
 
   const handleSubmitVote = (points: number) => {
-    console.log('Voting for', points);
-    console.log('User ID', userId);
-    console.log('Current ticket', currentTicket);
-    if (!userId || !currentTicket) return;
-
-    console.log('Votes', votes);
-    // Check if the user has already voted
-    const existingVoteIndex = votes.findIndex(vote => vote.userId === userId);
+    if (!userId || !currentTicket || !socket) return;
     
-    if (existingVoteIndex >= 0) {
-      // Update existing vote
-      const updatedVotes = [...votes];
-      updatedVotes[existingVoteIndex] = { userId, points };
-      setVotes(updatedVotes);
-    } else {
-      // Add new vote
-      setVotes([...votes, { userId, points }]);
-    }
+    const vote: Vote = { userId, points, displayName: participants.find(p => p.userId === userId)?.displayName || '' };
+    socket.emit('submitVote', vote);
     
     toast({
       title: 'Vote submitted',
@@ -144,9 +185,9 @@ const App: React.FC = () => {
   };
 
   const handleEndSession = () => {
-    setCurrentTicket(null);
-    setVotes([]);
-    setShowResults(false);
+    if (socket) {
+      socket.emit('endMeeting');
+    }
   };
 
   return (
