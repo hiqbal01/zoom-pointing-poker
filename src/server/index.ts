@@ -30,6 +30,8 @@ app.use((req, res, next) => {
     "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
   );
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Strict-Transport-Security', 'DENY');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
   next();
 });
 
@@ -147,6 +149,8 @@ if (process.env.NODE_ENV === 'production') {
           "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
           );
       res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+      res.setHeader('Strict-Transport-Security', 'DENY');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
     }
   }));
 
