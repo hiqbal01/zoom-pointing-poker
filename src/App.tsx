@@ -18,7 +18,7 @@ const App: React.FC = () => {
   const [votes, setVotes] = useState<Vote[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [socketUrl, setSocketUrl] = useState<string>('http://localhost:3001');
+  const [socketUrl, setSocketUrl] = useState<string>();
   const toast = useToast();
 
   // Fetch server configuration
@@ -156,7 +156,7 @@ const App: React.FC = () => {
       }
     };
 
-    if (socketUrl) {  // Only initialize when we have a socket URL
+    if (socketUrl && socketUrl != '') {  // Only initialize when we have a socket URL
       initializeZoomSdk();
     }
 
