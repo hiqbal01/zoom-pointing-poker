@@ -8,9 +8,6 @@ import PointingSession from './components/PointingSession';
 import Results from './components/Results';
 import { Ticket, Vote, ZoomParticipant, ZoomUserContext } from './types';
 
-const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3001';
-console.log('Socket URL:', SOCKET_URL, 'Environment:', process.env.REACT_APP_SOCKET_URL);
-
 const App: React.FC = () => {
   const [zoomInitialized, setZoomInitialized] = useState(false);
   const [isHost, setIsHost] = useState(false);
@@ -21,7 +18,29 @@ const App: React.FC = () => {
   const [votes, setVotes] = useState<Vote[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [socketUrl, setSocketUrl] = useState<string>('http://localhost:3001');
   const toast = useToast();
+
+  // Fetch server configuration
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/config');
+        const config = await response.json();
+        setSocketUrl(config.socketUrl);
+      } catch (error) {
+        console.error('Error fetching server config:', error);
+        toast({
+          title: 'Error connecting to server',
+          description: 'Using default configuration',
+          status: 'warning',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+    };
+    fetchConfig();
+  }, [toast]);
 
   useEffect(() => {
     const initializeZoomSdk = async () => {
@@ -55,8 +74,9 @@ const App: React.FC = () => {
         setUserId(userContext.participantId);
         setIsHost(userContext.role === 'host' || userContext.role === 'cohost');
 
-        // Initialize socket connection
-        const newSocket = io(SOCKET_URL, {
+        // Initialize socket connection with the fetched URL
+        console.log('Connecting to socket at:', socketUrl);
+        const newSocket = io(socketUrl, {
           query: {
             meetingId: meetingContext.meetingID,
             userId: userContext.participantId

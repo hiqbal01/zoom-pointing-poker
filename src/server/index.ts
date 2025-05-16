@@ -22,6 +22,13 @@ const io = new Server(httpServer, {
 app.use(cors());
 app.use(express.json());
 
+// Add configuration endpoint
+app.get('/api/config', (req, res) => {
+  res.json({
+    socketUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+  });
+});
+
 // Security headers middleware
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'public, max-age=3600');
