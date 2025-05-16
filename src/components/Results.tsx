@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   Box,
   Button,
@@ -17,6 +17,7 @@ import {
 } from '@chakra-ui/react';
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import Confetti from './Confetti';
 import { Ticket, Vote } from '../types';
 
 // Register Chart.js components
@@ -35,6 +36,19 @@ const Results: React.FC<ResultsProps> = ({
   isHost,
   onEndSession,
 }) => {
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  useEffect(() => {
+    // Check if all votes are the same
+    const allVotesSame = votes.every(vote => vote.points === votes[0].points);
+    if (allVotesSame && votes.length > 0) {
+      console.log('Unanimous vote! Showing confetti');
+      setShowConfetti(true);
+      // Hide confetti after 5 seconds
+      setTimeout(() => setShowConfetti(false), 5000);
+    }
+  }, [votes]);
+
   // Calculate vote statistics
   const voteStats = useMemo(() => {
     const pointCounts: Record<number, number> = {};
@@ -100,65 +114,68 @@ const Results: React.FC<ResultsProps> = ({
   }, [voteStats]);
   
   return (
-    <VStack spacing={6} align="stretch">
-      <Box p={6} borderWidth={1} borderRadius="lg" boxShadow="md">
-        <VStack align="start" spacing={3}>
-          <Heading size="md">{ticket.title}</Heading>
-          {ticket.description && (
-            <Text>{ticket.description}</Text>
-          )}
-          
-          <HStack spacing={4} mt={2}>
-            <Badge colorScheme="blue" p={2} fontSize="md">
-              Average: {voteStats.average}
-            </Badge>
-            <Badge colorScheme="green" p={2} fontSize="md">
-              Consensus: {voteStats.mode}
-            </Badge>
-          </HStack>
-        </VStack>
-      </Box>
-      
-      <Box p={6} borderWidth={1} borderRadius="lg" boxShadow="md">
-        <Heading size="md" mb={4}>Voting Results</Heading>
+    <Box>
+      <Confetti active={showConfetti} duration={5000} />
+      <VStack spacing={6} align="stretch">
+        <Box p={6} borderWidth={1} borderRadius="lg" boxShadow="md">
+          <VStack align="start" spacing={3}>
+            <Heading size="md">{ticket.title}</Heading>
+            {ticket.description && (
+              <Text>{ticket.description}</Text>
+            )}
+            
+            <HStack spacing={4} mt={2}>
+              <Badge colorScheme="blue" p={2} fontSize="md">
+                Average: {voteStats.average}
+              </Badge>
+              <Badge colorScheme="green" p={2} fontSize="md">
+                Consensus: {voteStats.mode}
+              </Badge>
+            </HStack>
+          </VStack>
+        </Box>
         
-        <Flex direction={{ base: 'column', md: 'row' }} gap={6} align="center">
-          <Box flex="1" maxW={{ base: '100%', md: '50%' }} mx="auto">
-            <Pie data={chartData} />
-          </Box>
+        <Box p={6} borderWidth={1} borderRadius="lg" boxShadow="md">
+          <Heading size="md" mb={4}>Voting Results</Heading>
           
-          <Box flex="1">
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>Participant</Th>
-                  <Th isNumeric>Points</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {votes.map((vote, index) => (
-                  <Tr key={vote.userId}>
-                    <Td>{vote.displayName}</Td>
-                    <Td isNumeric>{vote.points}</Td>
+          <Flex direction={{ base: 'column', md: 'row' }} gap={6} align="center">
+            <Box flex="1" maxW={{ base: '100%', md: '50%' }} mx="auto">
+              <Pie data={chartData} options={{ maintainAspectRatio: false }} />
+            </Box>
+            
+            <Box flex="1">
+              <Table variant="simple">
+                <Thead>
+                  <Tr>
+                    <Th>Participant</Th>
+                    <Th isNumeric>Points</Th>
                   </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </Box>
-        </Flex>
-      </Box>
-      
-      {isHost && (
-        <Flex justify="flex-end">
-          <Button
-            colorScheme="blue"
-            onClick={onEndSession}
-          >
-            New Ticket
-          </Button>
-        </Flex>
-      )}
-    </VStack>
+                </Thead>
+                <Tbody>
+                  {votes.map((vote, index) => (
+                    <Tr key={vote.userId}>
+                      <Td>{vote.displayName}</Td>
+                      <Td isNumeric>{vote.points}</Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+            </Box>
+          </Flex>
+        </Box>
+        
+        {isHost && (
+          <Flex justify="flex-end">
+            <Button
+              colorScheme="blue"
+              onClick={onEndSession}
+            >
+              New Ticket
+            </Button>
+          </Flex>
+        )}
+      </VStack>
+    </Box>
   );
 };
 
