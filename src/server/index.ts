@@ -119,9 +119,11 @@ io.on('connection', (socket) => {
   });
 
   // Handle meeting end
-  socket.on('endMeeting', () => {
-    meetings.delete(meetingId);
-    io.to(meetingId).emit('meetingEnded');
+  socket.on('endTicket', () => {
+    const meetingData = getMeetingData(meetingId);
+    meetingData.ticket = null;
+    meetingData.votes = []
+    io.to(meetingId).emit('endedTicket');
   });
 
   // Handle disconnection

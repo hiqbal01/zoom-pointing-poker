@@ -94,20 +94,31 @@ const App: React.FC = () => {
           votes: Vote[];
           participants: ZoomParticipant[];
         }) => {
+          console.log('Received state update:', data);
           setCurrentTicket(data.ticket);
           setVotes(data.votes);
           setParticipants(data.participants);
+
+          // Check if all participants have voted
+          const allParticipantsVoted = data.participants.every(participant => 
+            data.votes.some(vote => vote.userId === participant.userId)
+          );
+
+          if (allParticipantsVoted && data.participants.length > 0) {
+            console.log('All participants have voted, revealing results');
+            setShowResults(true);
+          }
         });
 
-        newSocket.on('meetingEnded', () => {
+        newSocket.on('endedTicket', () => {
           setCurrentTicket(null);
           setVotes([]);
           setShowResults(false);
           toast({
-            title: 'Meeting ended',
-            description: 'The pointing session has ended.',
+            title: 'Ticket Pointed!',
+            description: 'We did it',
             status: 'info',
-            duration: 5000,
+            duration: 1000,
             isClosable: true,
           });
         });
@@ -186,13 +197,14 @@ const App: React.FC = () => {
     if (!userId || !currentTicket || !socket) return;
     
     const vote: Vote = { userId, points, displayName: participants.find(p => p.userId === userId)?.displayName || '' };
+    console.log(`Submitting vote:`, vote);
     socket.emit('submitVote', vote);
     
     toast({
       title: 'Vote submitted',
       description: `You voted: ${points} points`,
       status: 'info',
-      duration: 3000,
+      duration: 1000,
       isClosable: true,
     });
   };
@@ -211,7 +223,7 @@ const App: React.FC = () => {
 
   const handleEndSession = () => {
     if (socket) {
-      socket.emit('endMeeting');
+      socket.emit('endTicket');
     }
   };
 
