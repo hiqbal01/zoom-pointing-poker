@@ -3,6 +3,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import { Vote, Ticket } from '../src/types';
+import path from 'path';
 
 const app = express();
 const httpServer = createServer(app);
@@ -118,6 +119,16 @@ io.on('connection', (socket) => {
   // Join meeting room
   socket.join(meetingId);
 });
+
+// Serve static files in production
+if (process.env.NODE_ENV === 'production') {
+  const buildPath = path.join(__dirname, '../../build');
+  app.use(express.static(buildPath));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(buildPath, 'index.html'));
+  });
+}
 
 const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () => {
