@@ -154,7 +154,7 @@ const Results: React.FC<ResultsProps> = ({
             colorScheme="blue"
             onClick={onEndSession}
           >
-            Start New Session
+            New Ticket
           </Button>
         </Flex>
       )}

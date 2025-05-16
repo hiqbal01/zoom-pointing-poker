@@ -6,6 +6,7 @@ import Header from './components/Header';
 import TicketForm from './components/TicketForm';
 import PointingSession from './components/PointingSession';
 import Results from './components/Results';
+import Confetti from './components/Confetti';
 import { Ticket, Vote, ZoomParticipant, ZoomUserContext } from './types';
 
 const App: React.FC = () => {
@@ -17,6 +18,7 @@ const App: React.FC = () => {
   const [currentTicket, setCurrentTicket] = useState<Ticket | null>(null);
   const [votes, setVotes] = useState<Vote[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [socketUrl, setSocketUrl] = useState<string>();
   const toast = useToast();
@@ -109,6 +111,15 @@ const App: React.FC = () => {
           if (allParticipantsVoted && data.participants.length > 0) {
             console.log('All participants have voted, revealing results');
             setShowResults(true);
+
+            // Check if all votes are the same
+            const allVotesSame = data.votes.every(vote => vote.points === data.votes[0].points);
+            if (allVotesSame) {
+              console.log('Unanimous vote! Showing confetti');
+              setShowConfetti(true);
+              // Hide confetti after 3 seconds
+              setTimeout(() => setShowConfetti(false), 5000);
+            }
           }
         });
 
@@ -231,6 +242,7 @@ const App: React.FC = () => {
 
   return (
     <Box p={4} maxW="800px" mx="auto">
+      <Confetti active={showConfetti} duration={3000} />
       <VStack spacing={6} align="stretch">
         <Header isHost={isHost} />
         
