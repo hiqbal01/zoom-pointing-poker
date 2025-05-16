@@ -25,7 +25,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/config');
+        const response = await fetch('/api/config');
         const config = await response.json();
         setSocketUrl(config.socketUrl);
       } catch (error) {
