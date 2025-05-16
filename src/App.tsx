@@ -21,9 +21,10 @@ const App: React.FC = () => {
   const [socketUrl, setSocketUrl] = useState<string>('http://localhost:3001');
   const toast = useToast();
 
-  // Fetch server configuration
+
   useEffect(() => {
-    const fetchConfig = async () => {
+    const initializeZoomSdk = async () => {
+      console.log('Fetching server config');
       try {
         const response = await fetch('/api/config');
         const config = await response.json();
@@ -38,12 +39,6 @@ const App: React.FC = () => {
           isClosable: true,
         });
       }
-    };
-    fetchConfig();
-  }, [toast]);
-
-  useEffect(() => {
-    const initializeZoomSdk = async () => {
       console.log('Initializing Zoom SDK');
       try {
         // Configure Zoom SDK with required capabilities
