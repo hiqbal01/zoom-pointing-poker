@@ -18,6 +18,10 @@ const io = new Server(httpServer, {
   }
 });
 
+// Basic middleware
+app.use(cors());
+app.use(express.json());
+
 // Security headers middleware
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'public, max-age=3600');
@@ -28,10 +32,6 @@ app.use((req, res, next) => {
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   next();
 });
-
-// Middleware
-app.use(cors());
-app.use(express.json());
 
 // In-memory storage
 interface MeetingData {
@@ -139,8 +139,19 @@ io.on('connection', (socket) => {
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
   const buildPath = path.join(__dirname, '../../build');
-  app.use(express.static(buildPath));
-  
+  app.use(express.static(buildPath, {
+    setHeaders: (res, filePath) => {    
+      if (filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        res.setHeader(
+            'Content-Security-Policy',
+            "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+            );
+        res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+      }
+    }
+  }));
+
   app.get('*', (req, res) => {
     res.sendFile(path.join(buildPath, 'index.html'));
   });
