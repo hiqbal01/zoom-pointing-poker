@@ -18,6 +18,17 @@ const io = new Server(httpServer, {
   }
 });
 
+// Security headers middleware
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+  );
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json());
