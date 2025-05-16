@@ -141,14 +141,12 @@ if (process.env.NODE_ENV === 'production') {
   const buildPath = path.join(__dirname, '../../build');
   app.use(express.static(buildPath, {
     setHeaders: (res, filePath) => {    
-      if (filePath.endsWith('.html')) {
-        res.setHeader('Cache-Control', 'public, max-age=3600');
-        res.setHeader(
-            'Content-Security-Policy',
-            "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
-            );
-        res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-      }
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.setHeader(
+          'Content-Security-Policy',
+          "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          );
+      res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     }
   }));
 
