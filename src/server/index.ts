@@ -4,7 +4,7 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { Vote, Ticket } from '../types.js';
+import { Vote, Ticket, ZoomParticipant } from '../types.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,7 +46,7 @@ app.use((req, res, next) => {
 interface MeetingData {
   ticket: Ticket | null;
   votes: Vote[];
-  participants: string[];
+  participants: ZoomParticipant[];
 }
 
 const meetings = new Map<string, MeetingData>();
@@ -67,7 +67,9 @@ const getMeetingData = (meetingId: string): MeetingData => {
 io.on('connection', (socket) => {
   const meetingId = socket.handshake.query.meetingId as string;
   const userId = socket.handshake.query.userId as string;
-  
+  const displayName = socket.handshake.query.displayName as string;
+  const role = socket.handshake.query.role as string;
+
   if (!meetingId || !userId) {
     socket.disconnect();
     return;
@@ -77,8 +79,8 @@ io.on('connection', (socket) => {
   
   // Add participant to meeting
   const meetingData = getMeetingData(meetingId);
-  if (!meetingData.participants.includes(userId)) {
-    meetingData.participants.push(userId);
+  if (!meetingData.participants.some(p => p.userId === userId)) {
+    meetingData.participants.push({ userId, displayName, isHost: role === 'host', isCoHost: role === 'coHost' });
   }
   
   // Send current state to the new participant
@@ -129,7 +131,7 @@ io.on('connection', (socket) => {
   // Handle disconnection
   socket.on('disconnect', () => {
     const meetingData = getMeetingData(meetingId);
-    meetingData.participants = meetingData.participants.filter(id => id !== userId);
+    meetingData.participants = meetingData.participants.filter(p => p.userId !== userId);
     
     // If no participants left, clean up meeting data
     if (meetingData.participants.length === 0) {

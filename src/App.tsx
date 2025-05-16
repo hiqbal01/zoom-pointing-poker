@@ -81,7 +81,9 @@ const App: React.FC = () => {
         const newSocket = io(socketUrl, {
           query: {
             meetingId: meetingContext.meetingID,
-            userId: userContext.participantId
+            userId: userContext.participantId,
+            displayName: userContext.screenName,
+            role: userContext.role
           }
         });
 
@@ -188,7 +190,7 @@ const App: React.FC = () => {
       title: 'New ticket created',
       description: `Ticket "${ticket.title}" is now open for pointing.`,
       status: 'success',
-      duration: 5000,
+      duration: 2000,
       isClosable: true,
     });
   };
