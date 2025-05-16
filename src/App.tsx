@@ -9,6 +9,7 @@ import Results from './components/Results';
 import { Ticket, Vote, ZoomParticipant, ZoomUserContext } from './types';
 
 const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3001';
+console.log('Socket URL:', SOCKET_URL, 'Environment:', process.env.REACT_APP_SOCKET_URL);
 
 const App: React.FC = () => {
   const [zoomInitialized, setZoomInitialized] = useState(false);
