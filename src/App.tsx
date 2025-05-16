@@ -21,13 +21,13 @@ const App: React.FC = () => {
   const [socketUrl, setSocketUrl] = useState<string>('http://localhost:3001');
   const toast = useToast();
 
-
+  // Fetch server configuration
   useEffect(() => {
-    const initializeZoomSdk = async () => {
-      console.log('Fetching server config');
+    const fetchConfig = async () => {
       try {
         const response = await fetch('/api/config');
         const config = await response.json();
+        console.log('Received config:', config);
         setSocketUrl(config.socketUrl);
       } catch (error) {
         console.error('Error fetching server config:', error);
@@ -39,6 +39,13 @@ const App: React.FC = () => {
           isClosable: true,
         });
       }
+    };
+    fetchConfig();
+  }, [toast]);
+
+  // Initialize Zoom SDK and socket connection
+  useEffect(() => {
+    const initializeZoomSdk = async () => {
       console.log('Initializing Zoom SDK');
       try {
         // Configure Zoom SDK with required capabilities
@@ -149,7 +156,9 @@ const App: React.FC = () => {
       }
     };
 
-    initializeZoomSdk();
+    if (socketUrl) {  // Only initialize when we have a socket URL
+      initializeZoomSdk();
+    }
 
     // Cleanup function
     return () => {
@@ -157,7 +166,7 @@ const App: React.FC = () => {
         socket.disconnect();
       }
     };
-  }, [toast]);
+  }, [socketUrl, toast]); // Add socketUrl as a dependency
 
   const handleCreateTicket = (ticket: Ticket) => {
     if (socket) {
